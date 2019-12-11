@@ -9,8 +9,8 @@ import os
 
 DEFAULT_PADDING = 100
 
-# Number of ms before "close enough" and stitch two subbed lines of dialogue together.
-EPSILON = 10
+# Number of seconds before "close enough" and stitch two subbed lines of dialogue together.
+EPSILON = 0.01
 
 
 def init_parser():
