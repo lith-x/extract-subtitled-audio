@@ -67,7 +67,7 @@ def main():
     args = init_parser()
     padding = args.padding or DEFAULT_PADDING
 
-    subs = get_reduced_subs(args.subtitle)
+    subs = get_reduced_subs(args.subtitle, padding)
     input_file = ffmpeg.input(args.input)
 
     trimmed_segments = [input_file.audio.filter("atrim",
