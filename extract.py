@@ -9,6 +9,9 @@ import os
 
 DEFAULT_PADDING = 100
 
+# Number of ms before "close enough" and stitch two subbed lines of dialogue together.
+EPSILON = 10
+
 
 def init_parser():
     parser = ArgumentParser()
@@ -48,10 +51,9 @@ def get_reduced_subs(filename: str, padding: int) -> WebVTT:
     subtitles = get_subtitle_file(filename)
     i = len(subtitles) - 2
     while i >= 0:
-        # TODO: handle when start/end go outside length of media
         subtitles[i].start = shift_time_string(subtitles[i].start, -padding)
         subtitles[i].end = shift_time_string(subtitles[i].end, padding)
-        if subtitles[i+1].start_in_seconds - subtitles[i].end_in_seconds < 0:
+        if subtitles[i+1].start_in_seconds - subtitles[i].end_in_seconds <= EPSILON:
             subtitles[i].end = subtitles[i+1].end
             del subtitles.captions[i+1]
         i -= 1
