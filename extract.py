@@ -2,6 +2,7 @@
 
 from argparse import ArgumentParser
 from datetime import datetime, timedelta
+from ffmpeg.nodes import Stream, OutputStream
 from webvtt import WebVTT
 import ffmpeg
 import webvtt
@@ -15,10 +16,10 @@ EPSILON = 0.01
 
 def init_parser():
     parser = ArgumentParser()
-    parser.add_argument("-s", "--subtitle", metavar="filepath",
-                        help="path to .srt, .vtt, or .sbv file", type=str, required=True)
     parser.add_argument("-i", "--input", metavar="filepath",
                         help="path to media file to use for audio", type=str, required=True)
+    parser.add_argument("-s", "--subtitle", metavar="filepath",
+                        help="path to .srt, .vtt, or .sbv file", type=str, required=True)
     parser.add_argument("-o", "--output", metavar="filename",
                         help="name of the output file (default: [input]_trimmed.mp3)", type=str, required=False)
     parser.add_argument("-p", "--padding", metavar="ms",
@@ -65,20 +66,26 @@ def format_output_filename(filename: str, default: str) -> str:
     return out if out.endswith(".mp3") else out + ".mp3"
 
 
-def main():
-    args = init_parser()
-    padding = args.padding or DEFAULT_PADDING
-
-    subs = get_reduced_subs(args.subtitle, padding)
-    input_file = ffmpeg.input(args.input)
+def get_trimmed_ffmpeg_stream(input_filename: str, subtitle_filename: str, padding: int, output_filename: str) -> OutputStream:
+    input_file = ffmpeg.input(input_filename)
+    subtitles = get_reduced_subs(subtitle_filename, padding)
 
     trimmed_segments = [input_file.audio.filter("atrim",
-                                                start=sub.start_in_seconds, end=sub.end_in_seconds) for sub in subs]
-    trimmed_audio = ffmpeg.concat(*trimmed_segments, a=1, v=0)
+                                                start=sub.start_in_seconds, end=sub.end_in_seconds) for sub in subtitles]
+    concatenated_segments = ffmpeg.concat(*trimmed_segments, a=1, v=0)
 
-    output_filename = format_output_filename(args.output, args.input)
-    ffmpeg.output(trimmed_audio, output_filename).overwrite_output().run()
+    formatted_output_filename = format_output_filename(
+        output_filename, input_filename)
+    return ffmpeg.output(concatenated_segments, formatted_output_filename)
+
+
+def run_as_command():
+    args = init_parser()
+    padding = args.padding or DEFAULT_PADDING
+    stream = get_trimmed_ffmpeg_stream(
+        args.input, args.subtitle, padding, args.output)
+    stream.overwrite_output().run()
 
 
 if __name__ == "__main__":
-    main()
+    run_as_command()

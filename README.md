@@ -11,7 +11,7 @@
 - If you're on Windows, add the folder where you installed the ffmpeg binary to your `Path` environment variable (so ffmpeg-py can reliably find it).
     - Example: `C:\Etc\ffmpeg-4.2.1-win64-static\bin`
 - Install the necessary libraries from pip:
-    - `pip install ffmpeg-py webvtt-py`
+    - `pip install -r requirements.txt`
 
 ## Usage
 ```
